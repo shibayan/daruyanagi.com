@@ -9,7 +9,7 @@ trigger:
 stages:
 - stage: Build
   jobs:
-  - job: Build_site
+  - job: Build
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -23,6 +23,18 @@ stages:
         npm run build -- --dest dist
       displayName: 'npm install and build'
 
-    - publish: '$(Pipeline.Workspace)/dist'
-      artifact: 'site'
+    - publish: dist
+      artifact: site
       displayName: 'Publish artifact'
+
+- stage: Deploy
+  dependsOn:
+  - Build
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - download: current
+      artifact: site
