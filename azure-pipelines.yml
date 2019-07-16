@@ -6,32 +6,62 @@
 trigger:
 - master
 
-pool:
-  vmImage: 'ubuntu-latest'
+stages:
+- stage: Build
+  jobs:
+  - job: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '10.x'
+      displayName: 'Install Node.js'
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
+    - script: |
+        npm install
+        npm run build -- --dest dist
+      displayName: 'npm install and build'
 
-- script: |
-    npm install
-    npm run build -- --dest dist
-  displayName: 'npm install and build'
+    - publish: dist
+      artifact: site
+      displayName: 'Publish artifact'
 
-- task: ArchiveFiles@2
-  inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)/dist'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildNumber).zip'
-    replaceExistingArchive: true
-  displayName: 'Archive artifact'
+- stage: Deploy
+  dependsOn:
+  - Build
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  jobs:
+  - job: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - download: current
+      artifact: site
+      displayName: 'Download artifact'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
-  displayName: 'Publish artifact'
+    - script: |
+        wget https://aka.ms/downloadazcopy-v10-linux
+        tar -xvf downloadazcopy-v10-linux
+        cp ./azcopy_linux_amd64_*/azcopy ./
+      displayName: 'Install AzCopy v10'
+    
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: 'Azure Sponsorship'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          end=`date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ'`
+          sas=`az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv`
+          ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
+        arguments: 'daruyanagi1'
+      displayName: 'Sync to Storage'
+
+    - task: AzureCLI@1
+      inputs:
+        azureSubscription: 'Azure Sponsorship'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*'
+        arguments: 'daruyanagi1'
+      displayName: 'Purge CDN Cache'
