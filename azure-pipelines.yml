@@ -36,37 +36,36 @@ stages:
   - Build
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   jobs:
-  - job: Deploy
+  - deployment: Deploy
     pool:
       vmImage: 'ubuntu-latest'
-    steps:
-    - checkout: none
-    - download: current
-      artifact: site
-      displayName: 'Download artifact'
+    environment: production
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - script: |
+                wget https://aka.ms/downloadazcopy-v10-linux
+                tar -xvf downloadazcopy-v10-linux
+                cp ./azcopy_linux_amd64_*/azcopy ./
+              displayName: 'Install AzCopy v10'
+            
+            - task: AzureCLI@1
+              inputs:
+                azureSubscription: 'Azure Sponsorship'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  end=`date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ'`
+                  sas=`az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv`
+                  ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
+                arguments: 'daruyanagi1'
+              displayName: 'Sync to Storage'
 
-    - script: |
-        wget https://aka.ms/downloadazcopy-v10-linux
-        tar -xvf downloadazcopy-v10-linux
-        cp ./azcopy_linux_amd64_*/azcopy ./
-      displayName: 'Install AzCopy v10'
-    
-    - task: AzureCLI@1
-      inputs:
-        azureSubscription: 'Azure Sponsorship'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          end=`date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ'`
-          sas=`az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv`
-          ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
-        arguments: 'daruyanagi1'
-      displayName: 'Sync to Storage'
-
-    - task: AzureCLI@1
-      inputs:
-        azureSubscription: 'Azure Sponsorship'
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
-        arguments: 'daruyanagi1'
-      displayName: 'Purge CDN Cache'
+            - task: AzureCLI@1
+              inputs:
+                azureSubscription: 'Azure Sponsorship'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
+                arguments: 'daruyanagi1'
+              displayName: 'Purge CDN Cache'
