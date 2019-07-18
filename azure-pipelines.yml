@@ -1,10 +1,8 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - master
+
+variables:
+  npm_config_cache: $(Pipeline.Workspace)/.npm
 
 stages:
 - stage: Build
@@ -18,10 +16,16 @@ stages:
         versionSpec: '10.x'
       displayName: 'Install Node.js'
 
+    - task: CacheBeta@0
+      inputs:
+        key: $(Build.SourcesDirectory)/package-lock.json
+        path: $(npm_config_cache)
+      displayName: 'Cache npm'
+
     - script: |
-        npm install
+        npm ci
         npm run build -- --dest dist
-      displayName: 'npm install and build'
+      displayName: 'npm ci and build'
 
     - publish: dist
       artifact: site
@@ -30,12 +34,13 @@ stages:
 - stage: Deploy
   dependsOn:
   - Build
-  condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   jobs:
   - job: Deploy
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+    - checkout: none
     - download: current
       artifact: site
       displayName: 'Download artifact'
@@ -62,6 +67,6 @@ stages:
         azureSubscription: 'Azure Sponsorship'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*'
+          az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
         arguments: 'daruyanagi1'
       displayName: 'Purge CDN Cache'
