@@ -47,6 +47,12 @@ stages:
       runOnce:
         deploy:
           steps:
+            - script: |
+                wget https://aka.ms/downloadazcopy-v10-linux
+                tar -xvf downloadazcopy-v10-linux
+                cp ./azcopy_linux_amd64_*/azcopy ./
+              displayName: 'Install AzCopy v10'
+
             - task: AzureCLI@1
               inputs:
                 azureSubscription: 'Azure Sponsorship'
@@ -56,12 +62,6 @@ stages:
                   az storage account network-rule add --account-name $1 --ip-address $ip
                 arguments: 'daruyanagi1'
               displayName: 'Adding IP Address to Firewall'
-
-            - script: |
-                wget https://aka.ms/downloadazcopy-v10-linux
-                tar -xvf downloadazcopy-v10-linux
-                cp ./azcopy_linux_amd64_*/azcopy ./
-              displayName: 'Install AzCopy v10'
 
             - task: AzureCLI@1
               inputs:
