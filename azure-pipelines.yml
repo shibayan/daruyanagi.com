@@ -62,7 +62,7 @@ stages:
                   az storage account network-rule add --account-name $1 --ip-address $ip
                   az storage account network-rule list --account-name $1
                   end=$(date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ')
-                  sas=$(az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv)
+                  sas=$(az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv 2> /dev/null)
                   ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
                   az storage account network-rule remove --account-name $1 --ip-address $ip
                 arguments: 'daruyanagi1'
