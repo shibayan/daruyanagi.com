@@ -60,7 +60,7 @@ stages:
                 inlineScript: |
                   ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
                   az storage account network-rule add --account-name $1 --ip-address $ip
-                  sleep 5
+                  sleep 10
                   end=$(date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ')
                   sas=$(az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv)
                   ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
@@ -69,6 +69,9 @@ stages:
                   exit $status
                 arguments: 'daruyanagi1'
               displayName: 'Sync to Storage'
+
+            - script: echo "OK"
+              condition: always()
 
         routeTraffic:
           steps:
