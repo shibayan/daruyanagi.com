@@ -56,6 +56,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
@@ -66,6 +67,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   end=$(date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ')
@@ -77,6 +79,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
@@ -90,6 +93,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
