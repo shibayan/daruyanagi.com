@@ -47,12 +47,6 @@ stages:
       runOnce:
         deploy:
           steps:
-            - script: |
-                wget https://aka.ms/downloadazcopy-v10-linux
-                tar -xvf downloadazcopy-v10-linux
-                cp ./azcopy_linux_amd64_*/azcopy ./
-              displayName: 'Install AzCopy v10'
-
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
@@ -68,9 +62,7 @@ stages:
                 azureSubscription: 'Azure Sponsorship'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  end=$(date -d "5 minutes" '+%Y-%m-%dT%H:%M:%SZ')
-                  sas=$(az storage container generate-sas -n '$web' --account-name $1 --https-only --permissions dlrw --expiry $end -otsv)
-                  ./azcopy sync "$(Pipeline.Workspace)/site/" "https://$1.blob.core.windows.net/\$web?$sas" --recursive --delete-destination=true
+                  az storage blob sync --container '$web' --source "$(Pipeline.Workspace)/site/" --account-name $1
                 arguments: 'daruyanagi1'
               displayName: 'Sync to Storage'
 
