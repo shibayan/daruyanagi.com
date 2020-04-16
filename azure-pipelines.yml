@@ -50,6 +50,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
@@ -60,6 +61,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az storage blob sync --container '$web' --source "$(Pipeline.Workspace)/site/" --account-name $1
@@ -69,6 +71,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
@@ -82,6 +85,7 @@ stages:
             - task: AzureCLI@2
               inputs:
                 azureSubscription: 'Azure Sponsorship'
+                scriptType: 'bash'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
                   az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
