@@ -43,6 +43,7 @@ jobs:
 
     - name: Sync to Storage
       run: |
+        sleep 15
         az storage blob sync --container '$web' --source ./dist/ --account-name ${{ env.AZURE_STORAGE_NAME }}
 
     - name: Remove IP Address from Firewall
