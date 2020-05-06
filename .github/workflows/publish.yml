@@ -5,14 +5,15 @@ on:
     branches: [ master ]
 
 env:
-  NODE_VERSION: '12.x'
   AZURE_STORAGE_NAME: daruyanagi1
+  NODE_VERSION: '12.x'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - name: Use Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v1
       with:
