@@ -49,3 +49,7 @@ jobs:
       run: |
         ip=$(curl -s https://ipinfo.io/json | jq -r .ip
         az storage account network-rule remove --account-name ${{ env.AZURE_STORAGE_NAME }} --ip-address $ip
+
+    - name: Purge CDN Cache
+      run: |
+        az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
