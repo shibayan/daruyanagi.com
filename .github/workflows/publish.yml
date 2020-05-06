@@ -1,0 +1,55 @@
+name: Publish
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  NODE_VERSION: '12.x'
+  AZURE_STORAGE_NAME: daruyanagi1
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Cache node modules
+      uses: actions/cache@v1
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: npm ci and build
+      run: |
+        npm ci
+        npm run build -- --dest dist
+
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Adding IP Address to Firewall
+      run: |
+        ip=$(curl -s https://ipinfo.io/json | jq -r .ip
+        az storage account network-rule add --account-name ${{ env.AZURE_STORAGE_NAME }} --ip-address $ip
+
+    - name: Sync to Storage
+      run: |
+        az storage blob sync --container '$web' --source ./dist/ --account-name ${{ env.AZURE_STORAGE_NAME }}
+
+    - name: Remove IP Address from Firewall
+      run: |
+        ip=$(curl -s https://ipinfo.io/json | jq -r .ip
+        az storage account network-rule remove --account-name ${{ env.AZURE_STORAGE_NAME }} --ip-address $ip
+
+    - name: Purge CDN Cache
+      run: |
+        az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
