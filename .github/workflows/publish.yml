@@ -38,7 +38,7 @@ jobs:
 
     - name: Adding IP Address to Firewall
       run: |
-        ip=$(curl -s https://ipinfo.io/json | jq -r .ip
+        ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
         az storage account network-rule add --account-name ${{ env.AZURE_STORAGE_NAME }} --ip-address $ip
 
     - name: Sync to Storage
@@ -47,7 +47,7 @@ jobs:
 
     - name: Remove IP Address from Firewall
       run: |
-        ip=$(curl -s https://ipinfo.io/json | jq -r .ip
+        ip=$(curl -s https://ipinfo.io/json | jq -r .ip)
         az storage account network-rule remove --account-name ${{ env.AZURE_STORAGE_NAME }} --ip-address $ip
 
     - name: Purge CDN Cache
