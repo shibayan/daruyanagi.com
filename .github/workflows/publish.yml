@@ -54,4 +54,4 @@ jobs:
 
     - name: Purge CDN Cache
       run: |
-        az cdn endpoint purge -g DaruTest-RG -n static-daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
+        az cdn endpoint purge -g DaruTest-RG -n daruyanagi --profile-name daruyanagi --content-paths '/*' --no-wait
