@@ -6,7 +6,7 @@ on:
 
 env:
   AZURE_STORAGE_NAME: daruyanagi1
-  NODE_VERSION: '14.x'
+  NODE_VERSION: '18.x'
 
 permissions:
   id-token: write
@@ -16,20 +16,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Use Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: ${{ env.NODE_VERSION }}
-
-    - name: Cache node modules
-      uses: actions/cache@v1
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
+        cache: npm
 
     - name: npm ci and build
       run: |
